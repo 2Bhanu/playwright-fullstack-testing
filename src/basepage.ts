@@ -3,362 +3,288 @@ import {
   Page,
 } from '@playwright/test';
 
-export abstract class BasePage {
-  /**
-   * Universal scope primitive.
-   *
-   * Entire framework internally operates only on Locator.
-   * Page is converted to root locator during bootstrap.
-   */
-  protected readonly root: Locator;
+type Role =
+  | 'alert'
+  | 'alertdialog'
+  | 'application'
+  | 'article'
+  | 'banner'
+  | 'button'
+  | 'cell'
+  | 'checkbox'
+  | 'columnheader'
+  | 'combobox'
+  | 'dialog'
+  | 'grid'
+  | 'heading'
+  | 'img'
+  | 'link'
+  | 'list'
+  | 'listitem'
+  | 'menu'
+  | 'menuitem'
+  | 'navigation'
+  | 'option'
+  | 'radio'
+  | 'row'
+  | 'rowheader'
+  | 'searchbox'
+  | 'switch'
+  | 'tab'
+  | 'table'
+  | 'tabpanel'
+  | 'textbox';
 
-  protected constructor(pageOrLocator: Page | Locator) {
-  if ('url' in pageOrLocator) {
-    this.root = pageOrLocator.locator('html');
-  } else {
-    this.root = pageOrLocator;
-  }
+interface RoleOptions {
+  checked?: boolean;
+  disabled?: boolean;
+  exact?: boolean;
+  expanded?: boolean;
+  includeHidden?: boolean;
+  level?: number;
+  name?: string | RegExp;
+  pressed?: boolean;
+  selected?: boolean;
 }
 
-  /**
-   * Child pages recreate themselves
-   * with a new scoped root.
-   *
-   * This preserves child typing across chaining.
-   */
-  protected abstract clone(root: Locator): this;
+export abstract class BasePage {
 
-  /**
-   * Internal helper used by all chain operations.
-   */
-  protected scoped(locator: Locator): this {
-    return this.clone(locator);
+  protected currentLocator: Locator | null = null;
+
+  constructor(protected readonly page: Page) {}
+
+  // =========================
+  // INTERNAL CHAIN HELPERS
+  // =========================
+
+  protected chain(
+    builder: (root: Page | Locator) => Locator
+  ): this {
+
+    const root =
+      this.currentLocator ?? this.page;
+
+    this.currentLocator = builder(root);
+
+    return this;
   }
 
-  // =====================================================
-  // PLAYWRIGHT ESCAPE HATCH
-  // =====================================================
+  protected resolveLocator(): Locator {
 
-  /**
-   * Gives direct access to underlying Playwright Locator.
-   */
-  getElement(): Locator {
-    return this.root;
+    const temp = this.currentLocator;
+
+    this.currentLocator = null;
+
+    if (temp == null) {
+      throw new Error(
+        'No locator found. Please create a locator chain first.'
+      );
+    }
+
+    return temp;
   }
 
-  // =====================================================
-  // CORE GENERIC LOCATORS
-  // =====================================================
+  // =========================
+  // ROLE LOCATORS
+  // =========================
 
-  locator(selector: string): this {
-    return this.scoped(
-      this.root.locator(selector)
+  role(
+    role: Role,
+    options?: RoleOptions
+  ): this {
+
+    return this.chain(
+      root => root.getByRole(role, options)
     );
   }
 
-  role(
-  role: Parameters<Locator['getByRole']>[0],
-  options?: Parameters<Locator['getByRole']>[1]
-): this {
-  return this.scoped(
-    this.root.getByRole(role, options)
-  );
-}
+  button(
+    options?: Omit<RoleOptions, 'name'> & {
+      name?: string | RegExp;
+    }
+  ): this {
+
+    return this.role('button', options);
+  }
+
+  textbox(
+    options?: Omit<RoleOptions, 'name'> & {
+      name?: string | RegExp;
+    }
+  ): this {
+
+    return this.role('textbox', options);
+  }
+
+  checkbox(
+    options?: Omit<RoleOptions, 'name'> & {
+      name?: string | RegExp;
+    }
+  ): this {
+
+    return this.role('checkbox', options);
+  }
+
+  row(
+    options?: Omit<RoleOptions, 'name'> & {
+      name?: string | RegExp;
+    }
+  ): this {
+
+    return this.role('row', options);
+  }
+
+  cell(
+    options?: Omit<RoleOptions, 'name'> & {
+      name?: string | RegExp;
+    }
+  ): this {
+
+    return this.role('cell', options);
+  }
+
+  link(
+    options?: Omit<RoleOptions, 'name'> & {
+      name?: string | RegExp;
+    }
+  ): this {
+
+    return this.role('link', options);
+  }
+
+  heading(
+    options?: Omit<RoleOptions, 'name'> & {
+      name?: string | RegExp;
+    }
+  ): this {
+
+    return this.role('heading', options);
+  }
+
+  // =========================
+  // TEXT-BASED LOCATORS
+  // =========================
 
   text(
     text: string | RegExp,
-    options?: Parameters<Locator['getByText']>[1]
+    options?: {
+      exact?: boolean;
+    }
   ): this {
-    return this.scoped(
-      this.root.getByText(text, options)
+
+    return this.chain(
+      root => root.getByText(text, options)
     );
   }
 
   label(
     text: string | RegExp,
-    options?: Parameters<Locator['getByLabel']>[1]
+    options?: {
+      exact?: boolean;
+    }
   ): this {
-    return this.scoped(
-      this.root.getByLabel(text, options)
+
+    return this.chain(
+      root => root.getByLabel(text, options)
     );
   }
 
   placeholder(
     text: string | RegExp,
-    options?: Parameters<Locator['getByPlaceholder']>[1]
+    options?: {
+      exact?: boolean;
+    }
   ): this {
-    return this.scoped(
-      this.root.getByPlaceholder(text, options)
+
+    return this.chain(
+      root => root.getByPlaceholder(text, options)
     );
   }
 
-  testId(value: string): this {
-    return this.scoped(
-      this.root.getByTestId(value)
+  testId(testId: string): this {
+
+    return this.chain(
+      root => root.getByTestId(testId)
     );
   }
 
-  // =====================================================
-  // ROLE SHORTCUTS
-  // =====================================================
+  // =========================
+  // TERMINAL ACCESS
+  // =========================
 
-  button(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('button', options);
+  getElement(): Locator {
+    return this.resolveLocator();
   }
 
-  link(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('link', options);
+  // =========================
+  // ACTIONS
+  // =========================
+
+  async click(): Promise<this> {
+    await this.resolveLocator().click();
+    return this;
   }
 
-  textbox(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('textbox', options);
+  async fill(value: string): Promise<this> {
+    await this.resolveLocator().fill(value);
+    return this;
   }
 
-  checkbox(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('checkbox', options);
+  async hover(): Promise<this> {
+    await this.resolveLocator().hover();
+    return this;
   }
 
-  radio(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('radio', options);
+  async check(): Promise<this> {
+    await this.resolveLocator().check();
+    return this;
   }
 
-  combobox(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('combobox', options);
+  async uncheck(): Promise<this> {
+    await this.resolveLocator().uncheck();
+    return this;
   }
 
-  option(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('option', options);
+  async press(key: string): Promise<this> {
+    await this.resolveLocator().press(key);
+    return this;
   }
 
-  heading(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('heading', options);
+  async focus(): Promise<this> {
+    await this.resolveLocator().focus();
+    return this;
   }
 
-  dialog(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('dialog', options);
-  }
-
-  row(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('row', options);
-  }
-
-  cell(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('cell', options);
-  }
-
-  list(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('list', options);
-  }
-
-  listitem(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('listitem', options);
-  }
-
-  img(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('img', options);
-  }
-
-  tab(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('tab', options);
-  }
-
-  tabpanel(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('tabpanel', options);
-  }
-
-  menuitem(
-    options?: Parameters<Locator['getByRole']>[1]
-  ): this {
-    return this.role('menuitem', options);
-  }
-
-  // =====================================================
-  // LOCATOR MODIFIERS
-  // =====================================================
-
-  first(): this {
-    return this.scoped(
-      this.root.first()
-    );
-  }
-
-  last(): this {
-    return this.scoped(
-      this.root.last()
-    );
-  }
-
-  nth(index: number): this {
-    return this.scoped(
-      this.root.nth(index)
-    );
-  }
-
-  filter(
-    options: Parameters<Locator['filter']>[0]
-  ): this {
-    return this.scoped(
-      this.root.filter(options)
-    );
-  }
-
-  and(locator: Locator): this {
-    return this.scoped(
-      this.root.and(locator)
-    );
-  }
-
-  or(locator: Locator): this {
-    return this.scoped(
-      this.root.or(locator)
-    );
-  }
-
-  locatorHas(locator: Locator): this {
-    return this.filter({ has: locator });
-  }
-
-  locatorHasText(text: string | RegExp): this {
-    return this.filter({ hasText: text });
-  }
-
-  // =====================================================
-  // COMMON ACTIONS
-  // =====================================================
-
-  async click(): Promise<void> {
-    await this.root.click();
-  }
-
-  async fill(value: string): Promise<void> {
-    await this.root.fill(value);
-  }
-
-  async type(value: string): Promise<void> {
-    await this.root.type(value);
-  }
-
-  async press(key: string): Promise<void> {
-    await this.root.press(key);
-  }
-
-  async hover(): Promise<void> {
-    await this.root.hover();
-  }
-
-  async focus(): Promise<void> {
-    await this.root.focus();
-  }
-
-  async check(): Promise<void> {
-    await this.root.check();
-  }
-
-  async uncheck(): Promise<void> {
-    await this.root.uncheck();
-  }
-
-  async selectOption(
-    value: string | string[]
-  ): Promise<void> {
-    await this.root.selectOption(value);
-  }
-
-  // =====================================================
-  // COMMON STATE / VALUES
-  // =====================================================
-
-  async innerText(): Promise<string> {
-    return this.root.innerText();
+  async dblclick(): Promise<this> {
+    await this.resolveLocator().dblclick();
+    return this;
   }
 
   async textContent(): Promise<string | null> {
-    return this.root.textContent();
+    return await this.resolveLocator().textContent();
   }
 
-  async inputValue(): Promise<string> {
-    return this.root.inputValue();
+  async innerText(): Promise<string> {
+    return await this.resolveLocator().innerText();
   }
 
   async isVisible(): Promise<boolean> {
-    return this.root.isVisible();
+    return await this.resolveLocator().isVisible();
   }
 
   async isHidden(): Promise<boolean> {
-    return this.root.isHidden();
+    return await this.resolveLocator().isHidden();
   }
 
   async isEnabled(): Promise<boolean> {
-    return this.root.isEnabled();
+    return await this.resolveLocator().isEnabled();
   }
 
   async isDisabled(): Promise<boolean> {
-    return this.root.isDisabled();
+    return await this.resolveLocator().isDisabled();
   }
 
   async count(): Promise<number> {
-    return this.root.count();
-  }
-
-  async exists(): Promise<boolean> {
-    return (await this.count()) > 0;
-  }
-
-  // =====================================================
-  // WAIT HELPERS
-  // =====================================================
-
-  async waitForVisible(
-    timeout?: number
-  ): Promise<void> {
-    await this.root.waitFor({
-      state: 'visible',
-      timeout,
-    });
-  }
-
-  async waitForHidden(
-    timeout?: number
-  ): Promise<void> {
-    await this.root.waitFor({
-      state: 'hidden',
-      timeout,
-    });
-  }
-
-  async scrollIntoViewIfNeeded(): Promise<void> {
-    await this.root.scrollIntoViewIfNeeded();
+    return await this.resolveLocator().count();
   }
 }
