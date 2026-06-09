@@ -4,11 +4,11 @@ import CommonComponentsPage from '../pages/components/commonComponentsPage';
 
 
 type Fixtures = {
-  usersPage: CommonComponentsPage;
+  commonComponentsPage: CommonComponentsPage;
 };
 
 export const test = base.extend<Fixtures>({
-  usersPage: async ({ page }, use) => {
+  commonComponentsPage: async ({ page }, use) => {
     await use(new CommonComponentsPage(page));
   },
 });
