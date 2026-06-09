@@ -20,5 +20,8 @@
     "eslint-plugin-playwright": "^2.10.1",
     "prettier": "^3.3.0",
     "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "zod": "^3.25.23"
   }
 }
