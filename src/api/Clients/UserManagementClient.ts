@@ -1,22 +1,43 @@
+import { ApiRequest } from "./requests";
 
-import { BaseApiClient } from "./BaseApiClient";
+import { User } from "@/framework/fixtures/api/types-guards";
 
-import { CreateUser } from "@/schema/user";
+export interface CreateUserQuery {
 
+    notify?: boolean;
+}
 
-export class UserManagementClient
-    extends BaseApiClient {
+export type CreateUserRequest =
+    ApiRequest<
+        User,
+        CreateUserQuery
+    >;
+
+export class UserApi {
 
     async createUser(
-        payload: CreateUser
+        request: CreateUserRequest
     ) {
-        return this.request.post(
-            '/api/users',
-            {
-                headers:
-                    this.getHeaders(),
-                data: payload,
-            }
+
+        console.log(
+            "POST /users"
         );
+
+        console.log(
+            "Payload",
+            request.payload
+        );
+
+        console.log(
+            "Query",
+            request.query
+        );
+
+        return {
+
+            status: 201,
+
+            body: request.payload
+        };
     }
 }
