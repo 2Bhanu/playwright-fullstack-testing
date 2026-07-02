@@ -1,4 +1,7 @@
+import { Env } from '@/config/env';
+import { utils } from '@/framework/utils/utils';
 import {
+  expect,
   Locator,
   Page,
 } from '@playwright/test';
@@ -50,6 +53,8 @@ interface RoleOptions {
 export abstract class BasePage {
 
   protected currentLocator: Locator | null = null;
+  protected  endpoint!: string;
+  protected  readyLocator!: Locator;
 
   constructor(protected readonly page: Page) {}
 
@@ -83,6 +88,21 @@ export abstract class BasePage {
 
     return temp;
   }
+
+  //navigation helper
+  async navigate(options?: {
+    baseURL?: string;
+    pageLoadCheck?: boolean;
+}) {
+  //set defaults
+    const baseURL = options?.baseURL ?? Env.fsrBaseHost;
+    const pageLoadCheck = options?.pageLoadCheck ?? true;
+  //Navigate and conditionally validate page load
+    await this.page.goto(utils.buildUrl(this.endpoint, baseURL));
+    if (pageLoadCheck) {
+    await expect(this.readyLocator).toBeVisible();
+    }
+}
 
   // =========================
   // ROLE LOCATORS
