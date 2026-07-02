@@ -1,10 +1,12 @@
-import { Env } from '@/config/env';
-import { utils } from '@/framework/utils/utils';
 import {
   expect,
   Locator,
   Page,
 } from '@playwright/test';
+
+import { Env } from '@/config/env';
+import { utils } from '@/framework/utils/utils';
+
 
 type Role =
   | 'alert'
@@ -50,13 +52,31 @@ interface RoleOptions {
   selected?: boolean;
 }
 
+type LocatorOptions = Parameters<Page['locator']>[1];
+
 export abstract class BasePage {
 
   protected currentLocator: Locator | null = null;
   protected  endpoint!: string;
   protected  readyLocator!: Locator;
 
-  constructor(protected readonly page: Page) {}
+ 
+constructor(protected readonly page: Page) {}
+
+    //navigation helper
+  async navigate(options?: {
+    baseURL?: string;
+    pageLoadCheck?: boolean;
+}) {
+  //set defaults
+    const baseURL = options?.baseURL ?? Env.fsrBaseHost;
+    const pageLoadCheck = options?.pageLoadCheck ?? true;
+  //Navigate and conditionally validate page load
+    await this.page.goto(utils.buildUrl(this.endpoint, baseURL));
+    if (pageLoadCheck) {
+    await expect(this.readyLocator).toBeVisible();
+    }
+}
 
   // =========================
   // INTERNAL CHAIN HELPERS
@@ -89,20 +109,18 @@ export abstract class BasePage {
     return temp;
   }
 
-  //navigation helper
-  async navigate(options?: {
-    baseURL?: string;
-    pageLoadCheck?: boolean;
-}) {
-  //set defaults
-    const baseURL = options?.baseURL ?? Env.fsrBaseHost;
-    const pageLoadCheck = options?.pageLoadCheck ?? true;
-  //Navigate and conditionally validate page load
-    await this.page.goto(utils.buildUrl(this.endpoint, baseURL));
-    if (pageLoadCheck) {
-    await expect(this.readyLocator).toBeVisible();
-    }
+
+locator(
+  selector: string,
+  options?: LocatorOptions
+): this {
+
+  
+  return this.chain(
+    root => root.locator(selector, options)
+  );
 }
+
 
   // =========================
   // ROLE LOCATORS
