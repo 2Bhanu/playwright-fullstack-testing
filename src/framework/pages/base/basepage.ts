@@ -58,26 +58,26 @@ type FilterOptions = Parameters<Locator['filter']>[0];
 export abstract class BasePage {
 
   protected currentLocator: Locator | null = null;
-  protected  endpoint!: string;
-  protected  readyLocator!: Locator;
+  protected endpoint!: string;
+  protected readyLocator!: Locator;
 
- 
-constructor(protected readonly page: Page) {}
 
-    //navigation helper
+  constructor(protected readonly page: Page) { }
+
+  //navigation helper
   async navigate(options?: {
     baseURL?: string;
     pageLoadCheck?: boolean;
-}) {
-  //set defaults
+  }) {
+    //set defaults
     const baseURL = options?.baseURL ?? Env.fsrBaseHost;
     const pageLoadCheck = options?.pageLoadCheck ?? true;
-  //Navigate and conditionally validate page load
+    //Navigate and conditionally validate page load
     await this.page.goto(utils.buildUrl(this.endpoint, baseURL));
     if (pageLoadCheck) {
-    await expect(this.readyLocator).toBeVisible();
+      await expect(this.readyLocator).toBeVisible();
     }
-}
+  }
 
   // =========================
   // INTERNAL CHAIN HELPERS
@@ -112,25 +112,24 @@ constructor(protected readonly page: Page) {}
     return temp;
   }
 
-//General purpose locator method to create a locator chain. This is useful for creating locators that do not fit into the role-based or text-based categories.
-locator(
-  selector: string,
-  options?: LocatorOptions
-): this {
+  //General purpose locator method to create a locator chain. This is useful for creating locators that do not fit into the role-based or text-based categories.
+  locator(
+    selector: string,
+    options?: LocatorOptions
+  ): this {
 
-  
-  return this.chain(
-    root => root.locator(selector, options)
-  );
-}
 
-// filter method to filter the current locator chain based on the provided options. This is useful for narrowing down the results of a locator chain.
-filter(options?: FilterOptions): this {
+    return this.chain(
+      root => root.locator(selector, options)
+    );
+  }
 
-  return this.chain(
-    () => this.resolveLocator(false).filter(options)
-  );
-}
+  // filter method to filter the current locator chain based on the provided options. This is useful for narrowing down the results of a locator chain.
+  filter(options?: FilterOptions): this {
+    return this.chain(
+      () => this.resolveLocator(false).filter(options)
+    );
+  }
 
 
   // =========================
