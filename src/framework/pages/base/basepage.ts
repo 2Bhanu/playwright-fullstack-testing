@@ -53,6 +53,7 @@ interface RoleOptions {
 }
 
 type LocatorOptions = Parameters<Page['locator']>[1];
+type FilterOptions = Parameters<Locator['filter']>[0];
 
 export abstract class BasePage {
 
@@ -94,11 +95,13 @@ constructor(protected readonly page: Page) {}
     return this;
   }
 
-  protected resolveLocator(): Locator {
+  protected resolveLocator(resetCurrentLocator = true): Locator {
 
     const temp = this.currentLocator;
 
-    this.currentLocator = null;
+    if (resetCurrentLocator) {
+      this.currentLocator = null;
+    }
 
     if (temp == null) {
       throw new Error(
@@ -109,7 +112,7 @@ constructor(protected readonly page: Page) {}
     return temp;
   }
 
-
+//General purpose locator method to create a locator chain. This is useful for creating locators that do not fit into the role-based or text-based categories.
 locator(
   selector: string,
   options?: LocatorOptions
@@ -118,6 +121,14 @@ locator(
   
   return this.chain(
     root => root.locator(selector, options)
+  );
+}
+
+// filter method to filter the current locator chain based on the provided options. This is useful for narrowing down the results of a locator chain.
+filter(options?: FilterOptions): this {
+
+  return this.chain(
+    () => this.resolveLocator(false).filter(options)
   );
 }
 
