@@ -1,6 +1,7 @@
 node_modules/
 .env
 .env.local
+.env.*.local
 dist/
 build/
 *.log
@@ -16,3 +17,9 @@ build/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Config (contains secrets)
+/src/config/env.ts
+
+# Example test folders
+/tests/ui/example/
