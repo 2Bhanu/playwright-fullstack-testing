@@ -59,10 +59,18 @@ export abstract class BasePage {
 
   protected currentLocator: Locator | null = null;
   protected endpoint!: string;
-  protected readyLocator!: Locator;
+  protected readyLocator!: this;
 
 
   constructor(protected readonly page: Page) { }
+
+  getPage(){
+    return this.page;
+  }
+
+  async closeBrowser(){
+    await this.page.context().close();
+  }
 
   //navigation helper
   async navigate(options?: {
@@ -75,7 +83,7 @@ export abstract class BasePage {
     //Navigate and conditionally validate page load
     await this.page.goto(utils.buildUrl(this.endpoint, baseURL));
     if (pageLoadCheck) {
-      await expect(this.readyLocator).toBeVisible();
+      await expect(this.readyLocator.resolveLocator()).toBeVisible();
     }
   }
 
@@ -256,13 +264,7 @@ export abstract class BasePage {
     );
   }
 
-  // =========================
-  // TERMINAL ACCESS
-  // =========================
-
-  getElement(): Locator {
-    return this.resolveLocator();
-  }
+ 
 
   // =========================
   // ACTIONS
@@ -335,4 +337,5 @@ export abstract class BasePage {
   async count(): Promise<number> {
     return await this.resolveLocator().count();
   }
+
 }
