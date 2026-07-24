@@ -1,4 +1,5 @@
-import { Locator, Page } from '@playwright/test';
+import { Page } from '@playwright/test';
+
 import { BasePage } from '../base/basepage';
 
 export default class CommonComponentsPage extends BasePage {

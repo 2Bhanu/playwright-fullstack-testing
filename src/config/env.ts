@@ -15,6 +15,6 @@ export function getEnv(name: string): string {
 }
 export const Env = {
     fsrBaseHost: getEnv("FSR_BASE_HOST"),
-    adminUsername: getEnv("ADMIN_USERNAME"),
-    adminPassword: getEnv("ADMIN_PASSWORD"),
+    adminUsername: getEnv("FSR_BASE_USERNAME"),
+    adminPassword: getEnv("FSR_BASE_PASSWORD"),
 } as const;
