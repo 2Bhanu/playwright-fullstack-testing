@@ -121,7 +121,7 @@ export abstract class BasePage {
   }
 
   //General purpose locator method to create a locator chain. This is useful for creating locators that do not fit into the role-based or text-based categories.
-  locator(
+  protected locator(
     selector: string,
     options?: LocatorOptions
   ): this {
