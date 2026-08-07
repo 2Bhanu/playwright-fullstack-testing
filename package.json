@@ -9,10 +9,11 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "@playwright/test": "^1.59.1",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^22.19.17",
     "@typescript-eslint/eslint-plugin": "^8.58.2",
     "@typescript-eslint/parser": "^8.58.2",
+    "allure-playwright": "^3.10.2",
     "dotenv": "^16.4.5",
     "eslint": "^8.57.1",
     "eslint-import-resolver-typescript": "^4.4.5",
