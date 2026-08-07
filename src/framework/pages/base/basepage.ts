@@ -133,7 +133,7 @@ export abstract class BasePage {
   }
 
   // filter method to filter the current locator chain based on the provided options. This is useful for narrowing down the results of a locator chain.
-  filter(options?: FilterOptions): this {
+  protected filter(options?: FilterOptions): this {
     return this.chain(
       () => this.resolveLocator(false).filter(options)
     );
@@ -144,7 +144,7 @@ export abstract class BasePage {
   // ROLE LOCATORS
   // =========================
 
-  role(
+  protected role(
     role: Role,
     options?: RoleOptions
   ): this {
@@ -154,7 +154,7 @@ export abstract class BasePage {
     );
   }
 
-  button(
+  protected button(
     options?: Omit<RoleOptions, 'name'> & {
       name?: string | RegExp;
     }
@@ -163,7 +163,7 @@ export abstract class BasePage {
     return this.role('button', options);
   }
 
-  textbox(
+  protected textbox(
     options?: Omit<RoleOptions, 'name'> & {
       name?: string | RegExp;
     }
@@ -172,7 +172,7 @@ export abstract class BasePage {
     return this.role('textbox', options);
   }
 
-  checkbox(
+  protected checkbox(
     options?: Omit<RoleOptions, 'name'> & {
       name?: string | RegExp;
     }
@@ -181,7 +181,7 @@ export abstract class BasePage {
     return this.role('checkbox', options);
   }
 
-  row(
+  protected row(
     options?: Omit<RoleOptions, 'name'> & {
       name?: string | RegExp;
     }
@@ -190,7 +190,7 @@ export abstract class BasePage {
     return this.role('row', options);
   }
 
-  cell(
+  protected cell(
     options?: Omit<RoleOptions, 'name'> & {
       name?: string | RegExp;
     }
@@ -199,7 +199,7 @@ export abstract class BasePage {
     return this.role('cell', options);
   }
 
-  link(
+  protected link(
     options?: Omit<RoleOptions, 'name'> & {
       name?: string | RegExp;
     }
@@ -208,7 +208,7 @@ export abstract class BasePage {
     return this.role('link', options);
   }
 
-  heading(
+  protected heading(
     options?: Omit<RoleOptions, 'name'> & {
       name?: string | RegExp;
     }
@@ -221,7 +221,7 @@ export abstract class BasePage {
   // TEXT-BASED LOCATORS
   // =========================
 
-  text(
+  protected text(
     text: string | RegExp,
     options?: {
       exact?: boolean;
@@ -233,7 +233,7 @@ export abstract class BasePage {
     );
   }
 
-  label(
+  protected label(
     text: string | RegExp,
     options?: {
       exact?: boolean;
@@ -245,7 +245,7 @@ export abstract class BasePage {
     );
   }
 
-  placeholder(
+  protected placeholder(
     text: string | RegExp,
     options?: {
       exact?: boolean;
@@ -257,7 +257,7 @@ export abstract class BasePage {
     );
   }
 
-  testId(testId: string): this {
+  protected testId(testId: string): this {
 
     return this.chain(
       root => root.getByTestId(testId)
