@@ -24,5 +24,3 @@ export const test =
             await use(manager);
         },
     });
-
-export { expect };
