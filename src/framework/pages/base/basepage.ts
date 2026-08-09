@@ -15,10 +15,9 @@ import { utils } from '@/framework/utils/utils';
 
 export abstract class BasePage {
 
-  protected currentLocator: Locator | null = null;
   protected endpoint!: string;
   protected readyLocator!: SimplifiedLocator;
-  protected simplifiedLocator!: SimplifiedLocator;
+  protected readonly simplifiedLocator!: SimplifiedLocator;
 
   constructor(protected readonly page: Page) { 
       this.simplifiedLocator = new SimplifiedLocator(page);
@@ -44,6 +43,9 @@ export abstract class BasePage {
     await this.page.goto(utils.buildUrl(this.endpoint, baseURL));
     if (pageLoadCheck) {
       await this.readyLocator.expectedToBeVisible();
+    }
+    else{
+      
     }
   }
 }
