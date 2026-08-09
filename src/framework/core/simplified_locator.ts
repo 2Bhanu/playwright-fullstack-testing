@@ -4,6 +4,8 @@ import {
   Page,
 } from '@playwright/test';
 
+import type { BasePage } from '@/framework/pages/base/basepage';
+
 type Role = Parameters<Page['getByRole']>[0];
 type RoleOptions = Parameters<Page['getByRole']>[1];
 
@@ -37,6 +39,15 @@ export class SimplifiedLocator {
    */
   private readonly target: Locator | null;
 
+  /**
+   * The BasePage instance that owns this locator chain, if any.
+   *
+   * Set on the root SimplifiedLocator created by a BasePage and
+   * propagated through every chained locator so that
+   * setAsPageReadyIdentifier() can write back to the owning page.
+   */
+  private readonly owner?: BasePage;
+
   // ============================================================
   // CONSTRUCTION
   // ============================================================
@@ -58,12 +69,22 @@ export class SimplifiedLocator {
    */
   constructor(page: Page, target: Locator);
 
+  /**
+   * Creates a SimplifiedLocator optionally tied to an owning
+   * BasePage instance. The owner is used by
+   * setAsPageReadyIdentifier() to register this locator as the
+   * page-ready identifier on the owning page.
+   */
+  constructor(page: Page, target?: Locator, owner?: BasePage);
+
   constructor(
     page: Page,
-    target?: Locator
+    target?: Locator,
+    owner?: BasePage
   ) {
     this.page = page;
     this.target = target ?? null;
+    this.owner = owner;
   }
 
   // ============================================================
@@ -91,10 +112,16 @@ export class SimplifiedLocator {
   /**
    * Wraps a Playwright Locator in a new SimplifiedLocator.
    *
-   * The current SimplifiedLocator is never mutated.
+   * The current SimplifiedLocator is never mutated. The owning
+   * BasePage (if any) is propagated so setAsPageReadyIdentifier()
+   * still works on chained locators.
    */
   private wrap(locator: Locator): SimplifiedLocator {
-    return new SimplifiedLocator(this.page, locator);
+    return new SimplifiedLocator(
+      this.page,
+      locator,
+      this.owner
+    );
   }
 
   // ============================================================
@@ -555,6 +582,23 @@ export class SimplifiedLocator {
   // ============================================================
   // ASSERTIONS
   // ============================================================
+
+  /**
+   * Marks this locator as the page-ready identifier on its owning
+   * BasePage. BasePage.navigate() asserts this locator is visible
+   * after loading the page.
+   *
+   * The owning page is the BasePage instance that created the root
+   * SimplifiedLocator for this chain — no argument is required.
+   *
+   * Returns `this` so the marker stays fluent with the rest of the
+   * chain. If no owner is registered (locator created outside a
+   * BasePage), this is a no-op.
+   */
+  setAsPageReadyIdentifier(): SimplifiedLocator {
+    this.owner?.setReadyLocator(this);
+    return this;
+  }
 
   async expectedToBeVisible(): Promise<void> {
     await expect(this.resolveLocator()).toBeVisible();
