@@ -1,6 +1,5 @@
 import {
     test as base,
-    expect,
 } from '@playwright/test';
 
 import { ApiClientManager } from '@/api/Clients/ApiClientManager';
