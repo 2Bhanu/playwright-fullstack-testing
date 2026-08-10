@@ -8,7 +8,7 @@ type ApiFixtures = {
     apiClientManager: ApiClientManager;
 };
 
-export const test =
+export const test_api =
     base.extend<ApiFixtures>({
         apiClientManager: async (
             { request },

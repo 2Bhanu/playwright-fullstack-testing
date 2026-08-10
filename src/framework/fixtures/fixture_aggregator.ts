@@ -1,9 +1,9 @@
 import { mergeTests } from '@playwright/test';
 
 
-import { test as apiTest } from './api/api-fixture';
-import { test as loggingTest } from './log_fixture';
-import { test as pageTest } from './pageFixture';
+import { test_api as apiTest } from './api/api-fixture';
+import { test_log as loggingTest } from './log_fixture';
+import { test_page as pageTest } from './pageFixture';
 
 export const test = mergeTests(
   pageTest,

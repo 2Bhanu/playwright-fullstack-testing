@@ -7,7 +7,7 @@ import { testLogContext } from '../logging/test_logging_context';
 type TestFixtures = {
   testLogging: void;
 };
-export const test = base.extend<TestFixtures >({
+export const test_log = base.extend<TestFixtures >({
 
   testLogging: [
     async ({}, use, testInfo) => {
