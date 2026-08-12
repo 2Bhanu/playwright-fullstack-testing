@@ -1,6 +1,5 @@
 import {
     test as base,
-    expect,
 } from '@playwright/test';
 
 import { ApiClientManager } from '@/api/Clients/ApiClientManager';
@@ -9,7 +8,7 @@ type ApiFixtures = {
     apiClientManager: ApiClientManager;
 };
 
-export const test =
+export const test_api =
     base.extend<ApiFixtures>({
         apiClientManager: async (
             { request },
@@ -24,5 +23,3 @@ export const test =
             await use(manager);
         },
     });
-
-export { expect };

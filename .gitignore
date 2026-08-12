@@ -18,8 +18,18 @@ build/
 /playwright/.cache/
 /playwright/.auth/
 
+#allure
+/allure-report
+/allure-results
+
 # Config (contains secrets)
 /src/config/env.ts
 
 # Example test folders
 /tests/ui/example/
+/tests/api/example/
+/src/framework/pages/example_pages
+/src/framework/fixtures/example_fixture
+
+#playwright
+/.playwright-cli

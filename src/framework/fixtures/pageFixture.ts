@@ -10,7 +10,7 @@ type Fixtures = {
   loginPage: LoginPage;
 };
 
-export const test = base.extend<Fixtures>({
+export const test_page = base.extend<Fixtures>({
   commonComponentsPage: async ({ page }, use) => {
     await use(new CommonComponentsPage(page));
   },
@@ -19,4 +19,3 @@ export const test = base.extend<Fixtures>({
   }
 });
 
-export { expect };
