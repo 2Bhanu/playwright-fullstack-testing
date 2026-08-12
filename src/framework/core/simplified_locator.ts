@@ -2,8 +2,10 @@ import {
   expect,
   Locator,
   Page,
+  test,
 } from '@playwright/test';
 
+import { logger } from '@/framework/logging/logger';
 import type { BasePage } from '@/framework/pages/base/basepage';
 
 type Role = Parameters<Page['getByRole']>[0];
@@ -48,6 +50,21 @@ export class SimplifiedLocator {
    */
   private readonly owner?: BasePage;
 
+  /**
+   * The friendly name of this locator, used by action log
+   * statements (e.g. `Clicked usernameLocator`).
+   *
+   * Auto-stamped by the BasePage Proxy the first time the locator
+   * is read through a property accessor, and inherited through
+   * chained locators so that `usernameLocator.first().click()`
+   * still logs as `Clicked usernameLocator`.
+   *
+   * First-name-wins: once set, further setName() calls are no-ops,
+   * so aliasing (e.g. `const x = this.usernameLocator`) does not
+   * overwrite the original property name.
+   */
+  private _name?: string;
+
   // ============================================================
   // CONSTRUCTION
   // ============================================================
@@ -77,14 +94,28 @@ export class SimplifiedLocator {
    */
   constructor(page: Page, target?: Locator, owner?: BasePage);
 
+  /**
+   * Creates a SimplifiedLocator with an explicit name. The name
+   * is used by action log statements and inherited through
+   * chained locators. Normally auto-stamped by the BasePage Proxy.
+   */
   constructor(
     page: Page,
-    target?: Locator,
-    owner?: BasePage
+    target: Locator | null | undefined,
+    owner: BasePage | undefined,
+    name?: string
+  );
+
+  constructor(
+    page: Page,
+    target?: Locator | null,
+    owner?: BasePage,
+    name?: string
   ) {
     this.page = page;
     this.target = target ?? null;
     this.owner = owner;
+    this._name = name;
   }
 
   // ============================================================
@@ -114,13 +145,17 @@ export class SimplifiedLocator {
    *
    * The current SimplifiedLocator is never mutated. The owning
    * BasePage (if any) is propagated so setAsPageReadyIdentifier()
-   * still works on chained locators.
+   * still works on chained locators. The current `_name` is
+   * inherited so chained actions (e.g.
+   * `usernameLocator.first().click()`) log the original property
+   * name.
    */
   private wrap(locator: Locator): SimplifiedLocator {
     return new SimplifiedLocator(
       this.page,
       locator,
-      this.owner
+      this.owner,
+      this._name as string
     );
   }
 
@@ -423,8 +458,47 @@ export class SimplifiedLocator {
   // ACTIONS
   // ============================================================
 
+  /**
+   * Stamps a friendly name on this locator. Called by the
+   * BasePage Proxy when a locator property is read for the first
+   * time. First-name-wins: subsequent calls are no-ops so that
+   * aliasing (e.g. `const x = this.usernameLocator`) does not
+   * overwrite the original property name.
+   */
+  setName(name: string): void {
+    if (this._name === undefined) {
+      this._name = name;
+    }
+  }
+
+  /**
+   * Renders the action log line from the supplied template,
+   * emits it through the logger, and returns the rendered
+   * message (without the timestamp/level prefix) so callers can
+   * reuse it — typically as a `test.step()` name — without
+   * recomputing the placeholder substitution.
+   *
+   * The `{locatorName}` placeholder is replaced with this
+   * locator's friendly name, or `<unnamed>` if no name has been
+   * stamped. Callers compose the surrounding sentence so the
+   * helper scales to any action verb and any extra context
+   * (e.g. `Entered "secret" in {locatorName}`).
+   */
+  private logAction(template: string): string {
+    const message = template.replaceAll(
+      '{locatorName}',
+      this._name ?? '<unnamed>'
+    );
+    logger.info(message);
+    return message;
+  }
+
+
   async click(): Promise<void> {
-    await this.resolveLocator().click();
+    const stepName = this.logAction('Clicked {locatorName}');
+    await test.step(stepName, async () => {
+      await this.resolveLocator().click();
+    });
   }
 
   async dblclick(): Promise<void> {
@@ -432,7 +506,10 @@ export class SimplifiedLocator {
   }
 
   async fill(value: string): Promise<void> {
-    await this.resolveLocator().fill(value);
+    const stepName = this.logAction(`Filled {locatorName} with "${value}"`);
+    await test.step(stepName, async () => {
+      await this.resolveLocator().fill(value);
+    });
   }
 
   async clear(): Promise<void> {

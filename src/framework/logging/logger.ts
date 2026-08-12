@@ -35,6 +35,6 @@ class Logger {
     console.log(entry);
   }
 }
- 
-   
+
+
 export const logger = new Logger();
