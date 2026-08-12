@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {"test:report:allure": "allure generate allure-results --clean -o allure-report && allure open allure-report"},
   "keywords": [],
   "author": "",
   "license": "ISC",
