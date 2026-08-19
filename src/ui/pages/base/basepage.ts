@@ -1,11 +1,9 @@
 import {
-  expect,
-  Locator,
   Page,
 } from '@playwright/test';
 
 import { Env } from '@/config/env';
-import { SimplifiedLocator } from '@/framework/core/simplified_locator';
+
 import { logger } from '@/framework/logging/logger';
 import { utils } from '@/framework/utils/utils';
 
@@ -63,6 +61,16 @@ export abstract class BasePage {
       },
     });
   }
+
+  private static buildUrl(
+        endpoint: string,
+        baseURL: string 
+    ): string {
+        if (!/^https?:\/\//i.test(baseURL)) {
+        baseURL = `https://${baseURL}`;
+    }
+        return new URL(endpoint, baseURL).toString();
+    }
 
   getPage(){
     return this.page;
