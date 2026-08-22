@@ -3,9 +3,9 @@ import {
 } from '@playwright/test';
 
 import { Env } from '@/config/env';
-
 import { logger } from '@/framework/logging/logger';
 import { utils } from '@/framework/utils/utils';
+import { SimplifiedLocator } from '@/ui/core/simplified_locator';
 
 
 
