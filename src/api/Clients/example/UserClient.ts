@@ -14,8 +14,9 @@ export class UserClient extends BaseApiClient {
      * Each endpoint is a `SimplifiedRequest` bound to a base path.
      * Tests chain off the endpoint:
      *
+     *     const token = await authClient.getBearerToken();
      *     userClient.loginEndPoint
-     *         .withAuth(AuthHandler.bearer(token))
+     *         .withAuth('bearer', { kind: 'bearer', token })
      *         .withPayload(myUser)
      *         .post()
      */

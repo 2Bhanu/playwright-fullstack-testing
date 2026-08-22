@@ -3,10 +3,37 @@ import {
     APIResponse,
 } from '@playwright/test';
 
-import {
-    AuthHandler,
-    type AuthSpec,
-} from './AuthHandler';
+
+/*
+ * ================================================================
+ * AUTH TYPES
+ * ================================================================
+ *
+ * The auth kind is a single string tag. Credentials are passed in
+ * already-resolved — tests obtain them from `AuthClient.getBearerToken()`
+ * etc. before chaining `withAuth(...)`. The credentials shape is
+ * constrained to match the kind at call time.
+ */
+export type AuthType =
+    | 'bearer'
+    | 'basic'
+    | 'apiKey';
+
+export type AuthCredentials =
+    | {
+        kind: 'bearer';
+        token: string;
+    }
+    | {
+        kind: 'basic';
+        username: string;
+        password: string;
+    }
+    | {
+        kind: 'apiKey';
+        key: string;
+        headerName?: string;
+    };
 
 
 /**
@@ -19,8 +46,10 @@ import {
  *
  * Usage:
  *
+ *     const token = await authClient.getBearerToken();
+ *
  *     const response = await userClient.loginEndPoint
- *         .withAuth(AuthHandler.bearer(token))
+ *         .withAuth('bearer', token)
  *         .withPayload(myUser)
  *         .post();
  *
@@ -36,7 +65,8 @@ export class SimplifiedRequest {
     private headers: Record<string, string> = {};
     private params: Record<string, string> = {};
     private payload: unknown = undefined;
-    private authHandler?: AuthSpec;
+    private authType?: AuthType;
+    private authCredentials?: AuthCredentials;
     private ignoreHTTPSErrors: boolean = false;
 
     constructor(
@@ -55,12 +85,16 @@ export class SimplifiedRequest {
      * Apply an auth strategy to this request only.
      *
      * Mutates only this chain's state; does not affect sibling
-     * endpoints or subsequent calls on this endpoint.
+     * endpoints or subsequent calls on this endpoint. Credentials
+     * are passed in already-resolved — obtain them from
+     * `AuthClient.getBearerToken()` / `getBasicAuth()` / `getApiKey()`.
      */
     withAuth(
-        auth: AuthSpec
+        authType: AuthType,
+        credentials: AuthCredentials
     ): this {
-        this.authHandler = auth;
+        this.authType = authType;
+        this.authCredentials = credentials;
         return this;
     }
 
@@ -155,7 +189,7 @@ export class SimplifiedRequest {
         method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
     ): Promise<APIResponse> {
 
-        const headers = await this.resolveHeaders();
+        const headers = this.buildHeaders();
         const params = this.params;
 
         const options: Parameters<APIRequestContext['fetch']>[1] = {
@@ -175,19 +209,67 @@ export class SimplifiedRequest {
         );
     }
 
-    private async resolveHeaders(): Promise<Record<string, string>> {
+    /**
+     * Project the chain's auth state (if any) onto the headers bag.
+     *
+     * The kind is stored separately from credentials so a kind-cred
+     * mismatch is caught here rather than at the call site.
+     */
+    private buildHeaders(): Record<string, string> {
 
-        let headers = {
+        const headers = {
             ...this.headers
         };
 
-        if (this.authHandler) {
-            headers = await AuthHandler.apply(
-                headers,
-                this.authHandler
-            );
+        if (
+            !this.authType
+            || !this.authCredentials
+            || this.authCredentials.kind !== this.authType
+        ) {
+            return headers;
         }
 
-        return headers;
+        switch (this.authType) {
+
+        case 'bearer': {
+            const { token } =
+                this.authCredentials as Extract<
+                    AuthCredentials,
+                    { kind: 'bearer' }
+                >;
+            return {
+                ...headers,
+                Authorization: `Bearer ${token}`
+            };
+        }
+
+        case 'basic': {
+            const { username, password } =
+                this.authCredentials as Extract<
+                    AuthCredentials,
+                    { kind: 'basic' }
+                >;
+            const encoded =
+                Buffer.from(
+                    `${username}:${password}`
+                ).toString('base64');
+            return {
+                ...headers,
+                Authorization: `Basic ${encoded}`
+            };
+        }
+
+        case 'apiKey': {
+            const { key, headerName } =
+                this.authCredentials as Extract<
+                    AuthCredentials,
+                    { kind: 'apiKey' }
+                >;
+            return {
+                ...headers,
+                [headerName ?? 'X-API-Key']: key
+            };
+        }
+        }
     }
 }

@@ -1,5 +1,6 @@
 import type { APIRequestContext } from '@playwright/test';
 
+import { AuthClient } from './AuthClient';
 import { BaseApiClient } from './BaseApiClient';
 import { AdminClient } from './example/AdminClient';
 import { UserClient } from './example/UserClient';
@@ -61,6 +62,7 @@ export class ApiClientManager {
      * The value is the client CLASS.
      */
     static readonly clients = {
+        authClient: AuthClient,
         userClient: UserClient,
         adminClient: AdminClient,
     } as const;
