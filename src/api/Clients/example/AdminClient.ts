@@ -1,11 +1,18 @@
 import { BaseApiClient } from "../BaseApiClient";
+import { SimplifiedRequest } from "../SimplifiedRequest";
 
 
 export class AdminClient extends BaseApiClient {
 
-    async createAdmin(admin: object) {
-        return this.request.post('/admins', {
-            data: admin,
-        });
-    }
+    readonly createAdminEndPoint =
+        new SimplifiedRequest(
+            this.request,
+            '/admins'
+        );
+
+    readonly getAdminEndPoint =
+        new SimplifiedRequest(
+            this.request,
+            '/admins'
+        );
 }

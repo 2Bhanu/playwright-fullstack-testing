@@ -1,9 +1,54 @@
 import type { APIRequestContext } from '@playwright/test';
+
 import { BaseApiClient } from '../BaseApiClient';
+import { SimplifiedRequest } from '../SimplifiedRequest';
+
 
 export class UserClient extends BaseApiClient {
 
-    static async setup(request: APIRequestContext) {
+    /*
+     * ============================================================
+     * ENDPOINTS
+     * ============================================================
+     *
+     * Each endpoint is a `SimplifiedRequest` bound to a base path.
+     * Tests chain off the endpoint:
+     *
+     *     userClient.loginEndPoint
+     *         .withAuth(AuthHandler.bearer(token))
+     *         .withPayload(myUser)
+     *         .post()
+     */
+    readonly loginEndPoint =
+        new SimplifiedRequest(
+            this.request,
+            '/login'
+        );
+
+    readonly updateEndPoint =
+        new SimplifiedRequest(
+            this.request,
+            '/users'
+        );
+
+    readonly getUserEndPoint =
+        new SimplifiedRequest(
+            this.request,
+            '/users'
+        );
+
+
+    /*
+     * ============================================================
+     * SETUP / CLEANUP
+     * ============================================================
+     *
+     * Called by ApiClientManager before/after each test that uses
+     * this client. Use them to seed or tear down tenant data.
+     */
+    static async setup(
+        request: APIRequestContext
+    ) {
         console.log('UserClient setup');
 
         // Example:
@@ -12,21 +57,13 @@ export class UserClient extends BaseApiClient {
         // seed required data
     }
 
-    static async cleanup(request: APIRequestContext) {
+    static async cleanup(
+        request: APIRequestContext
+    ) {
         console.log('UserClient cleanup');
 
         // Example:
         // delete test data
         // remove tenant
-    }
-
-    async login() {
-        // actual client operation
-    }
-
-    async createUser(user: object) {
-        return this.request.post('/users', {
-            data: user,
-        });
     }
 }
