@@ -1,7 +1,7 @@
 import { APIRequestContext } from "@playwright/test";
 
 export abstract class BaseApiClient {
-    protected constructor(
+    public constructor(
         protected readonly request: APIRequestContext
     ) {}
 }

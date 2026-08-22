@@ -1,62 +1,137 @@
 import type { APIRequestContext } from '@playwright/test';
+
 import { BaseApiClient } from './BaseApiClient';
-import { UserClient } from './example/UserClient';
 import { AdminClient } from './example/AdminClient';
+import { UserClient } from './example/UserClient';
 
+/*
+ * Describes a CLIENT CLASS.
+ *
+ * The constructor is deliberately public in this type because
+ * ApiClientManager is the component responsible for constructing
+ * clients.
+ *
+ * If BaseApiClient has a protected constructor, the actual client
+ * classes can still be instantiated by the manager.
+ */
+export type ClientClass<
+    T extends BaseApiClient = BaseApiClient
+> =
+    (new (
+        request: APIRequestContext
+    ) => T)
+    & {
+        setup?: (
+            request: APIRequestContext
+        ) => Promise<void>;
 
-type ClientClass<T extends BaseApiClient = BaseApiClient> =
-    (new (request: APIRequestContext) => T) & {
-        setup?: (request: APIRequestContext) => Promise<void>;
-        cleanup?: (request: APIRequestContext) => Promise<void>;
+        cleanup?: (
+            request: APIRequestContext
+        ) => Promise<void>;
     };
+
+
+/*
+ * Extract the INSTANCE type from a class without requiring
+ * the constructor itself to be public.
+ *
+ * For example:
+ *
+ *     ClientInstance<typeof UserClient>
+ *
+ * becomes:
+ *
+ *     UserClient
+ */
+type ClientInstance<T> =
+    T extends { prototype: infer I }
+        ? I
+        : never;
+
 
 export class ApiClientManager {
 
     /*
-     * The API client registry.
+     * ============================================================
+     * CLIENT REGISTRY
+     * ============================================================
      *
-     * This is deliberately explicit.
-     * Adding a new client means registering it here.
+     * The key becomes the fixture name.
+     *
+     * The value is the client CLASS.
      */
     static readonly clients = {
         userClient: UserClient,
         adminClient: AdminClient,
     } as const;
 
+
     constructor(
         private readonly request: APIRequestContext
     ) {}
 
+
+    /*
+     * ============================================================
+     * CREATE
+     * ============================================================
+     */
     async create<T extends ClientClass>(
         ClientClass: T
-    ): Promise<InstanceType<T>> {
+    ): Promise<ClientInstance<T>> {
 
-        /*
-         * Client-specific setup is handled by the manager.
-         * The fixture does not need to know whether setup exists.
-         */
         const setup = ClientClass.setup;
 
-if (setup) {
-    await setup(this.request);
-}
+        if (setup) {
+            await setup(this.request);
+        }
 
         return new ClientClass(
             this.request
-        ) as InstanceType<T>;
+        ) as ClientInstance<T>;
     }
 
+
+    /*
+     * ============================================================
+     * CLEANUP
+     * ============================================================
+     */
     async cleanup<T extends ClientClass>(
         ClientClass: T
     ): Promise<void> {
 
-        /*
-         * Client-specific cleanup is also handled here.
-         */
         const cleanup = ClientClass.cleanup;
 
-if (cleanup) {
-    await cleanup(this.request);
-}
+        if (cleanup) {
+            await cleanup(this.request);
+        }
     }
 }
+
+
+/*
+ * ================================================================
+ * PLAYWRIGHT API CLIENT FIXTURES
+ * ================================================================
+ *
+ * Converts:
+ *
+ *     {
+ *         userClient: typeof UserClient,
+ *         adminClient: typeof AdminClient
+ *     }
+ *
+ * into:
+ *
+ *     {
+ *         userClient: UserClient,
+ *         adminClient: AdminClient
+ *     }
+ */
+export type ApiClientFixtures = {
+    [K in keyof typeof ApiClientManager.clients]:
+        ClientInstance<
+            typeof ApiClientManager.clients[K]
+        >;
+};
