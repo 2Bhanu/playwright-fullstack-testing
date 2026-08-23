@@ -16,7 +16,7 @@ export class UserClient extends BaseApiClient {
      *
      *     const token = await authClient.getBearerToken();
      *     userClient.loginEndPoint
-     *         .withAuth('bearer', { kind: 'bearer', token })
+     *         .withAuth('bearer', token)
      *         .withPayload(myUser)
      *         .post()
      */

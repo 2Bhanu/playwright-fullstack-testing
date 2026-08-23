@@ -53,12 +53,21 @@ export type AuthCredentials =
  *         .withPayload(myUser)
  *         .post();
  *
+ *     // basic:
+ *     .withAuth('basic', { username, password })
+ *
+ *     // api key (optional custom header name):
+ *     .withAuth('apiKey', key)
+ *     .withAuth('apiKey', key, 'X-Custom-Key')
+ *
  *     expect(response.status()).toBe(201);
  *     const body = await response.json();
  *
  * The chain is single-use: terminal methods consume the chain state
  * and the same SimplifiedRequest instance can be reused, but each
  * terminal call snapshots the current state at call time.
+ * 
+ * Note: The actual token/ api key for the withAuth method should be obtained from the AuthClient or similar service, and not hardcoded in the test code. This ensures that the tests remain secure and maintainable. 
  */
 export class SimplifiedRequest {
 
@@ -85,16 +94,83 @@ export class SimplifiedRequest {
      * Apply an auth strategy to this request only.
      *
      * Mutates only this chain's state; does not affect sibling
-     * endpoints or subsequent calls on this endpoint. Credentials
-     * are passed in already-resolved — obtain them from
-     * `AuthClient.getBearerToken()` / `getBasicAuth()` / `getApiKey()`.
+     * endpoints or subsequent calls on this endpoint. The shape of
+     * the credentials argument is constrained by the kind at compile
+     * time, so the call site stays short:
+     *
+     *     .withAuth('bearer', token)
+     *     .withAuth('basic', { username, password })
+     *     .withAuth('apiKey', key)                  // uses X-API-Key
+     *     .withAuth('apiKey', key, 'X-Custom-Key')  // custom header
+     *
+     * Obtain credentials from `AuthClient.getBearerToken()` /
+     * `getBasicAuth()` / `getApiKey()`.
      */
     withAuth(
+        kind: 'bearer',
+        token: string
+    ): this;
+    withAuth(
+        kind: 'basic',
+        credentials: {
+            username: string;
+            password: string;
+        }
+    ): this;
+    withAuth(
+        kind: 'apiKey',
+        key: string,
+        headerName?: string
+    ): this;
+    withAuth(
         authType: AuthType,
-        credentials: AuthCredentials
+        credentialsOrKey: string | {
+            username: string;
+            password: string;
+        } | {
+            key: string;
+            headerName?: string;
+        },
+        headerName?: string
     ): this {
         this.authType = authType;
-        this.authCredentials = credentials;
+
+        switch (authType) {
+
+        case 'bearer': {
+            this.authCredentials = {
+                kind: 'bearer',
+                token: credentialsOrKey as string
+            };
+            break;
+        }
+
+        case 'basic': {
+            const {
+                username,
+                password
+            } = credentialsOrKey as {
+                username: string;
+                password: string;
+            };
+            this.authCredentials = {
+                kind: 'basic',
+                username,
+                password
+            };
+            break;
+        }
+
+        case 'apiKey': {
+            this.authCredentials = {
+                kind: 'apiKey',
+                key: credentialsOrKey as string,
+                headerName
+            };
+            break;
+        }
+        }
+
         return this;
     }
 
