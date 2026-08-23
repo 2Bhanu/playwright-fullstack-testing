@@ -3,6 +3,7 @@ import type { APIRequestContext } from '@playwright/test';
 import { AuthClient } from './AuthClient';
 import { BaseApiClient } from './BaseApiClient';
 import { AdminClient } from './example/AdminClient';
+import { ReqresUserClient } from './example/reqresUserClient';
 import { UserClient } from './example/UserClient';
 
 /*
@@ -65,6 +66,7 @@ export class ApiClientManager {
         authClient: AuthClient,
         userClient: UserClient,
         adminClient: AdminClient,
+        reqresUserClient: ReqresUserClient,
     } as const;
 
 

@@ -1,3 +1,5 @@
+
+import { logger } from '@/framework/logging/logger';
 import {
     APIRequestContext,
     APIResponse,
@@ -66,8 +68,8 @@ export type AuthCredentials =
  * The chain is single-use: terminal methods consume the chain state
  * and the same SimplifiedRequest instance can be reused, but each
  * terminal call snapshots the current state at call time.
- * 
- * Note: The actual token/ api key for the withAuth method should be obtained from the AuthClient or similar service, and not hardcoded in the test code. This ensures that the tests remain secure and maintainable. 
+ *
+ * Note: The actual token/ api key for the withAuth method should be obtained from the AuthClient or similar service, and not hardcoded in the test code. This ensures that the tests remain secure and maintainable.
  */
 export class SimplifiedRequest {
 
@@ -77,10 +79,12 @@ export class SimplifiedRequest {
     private authType?: AuthType;
     private authCredentials?: AuthCredentials;
     private ignoreHTTPSErrors: boolean = false;
+    private chainForURL?: string;
 
     constructor(
         private readonly request: APIRequestContext,
-        private readonly basePath: string
+        private readonly basePath: string,
+        private readonly defaultForURL?: string
     ) {}
 
 
@@ -171,6 +175,22 @@ export class SimplifiedRequest {
         }
         }
 
+        return this;
+    }
+
+    /**
+     * Override the base URL for this request only.
+     *
+     * Resolved against `basePath` when the terminal method fires.
+     * Falls back to the client-level default (set via
+     * `BaseApiClient`'s `forURL` option) when omitted.
+     *
+     *     await reqresUserClient.listUsersEndPoint
+     *         .forURL('https://staging.reqres.in')
+     *         .get();
+     */
+    forURL(url: string): this {
+        this.chainForURL = url;
         return this;
     }
 
@@ -280,9 +300,38 @@ export class SimplifiedRequest {
         }
 
         return this.request.fetch(
-            this.basePath,
+            this.resolvePath(),
             options
         );
+    }
+
+    /**
+     * Resolve `basePath` against the active base URL.
+     *
+     * Chain-level `.forURL(...)` wins; otherwise the client-level
+     * default (set via `BaseApiClient`'s `forURL` option) is used.
+     * If neither is set, the path is returned as-is and Playwright
+     * resolves it against its own configured baseURL (if any).
+     */
+    private resolvePath(): string {
+
+        const baseURL =
+            this.chainForURL ?? this.defaultForURL;
+
+        if (!baseURL) {
+            return this.basePath;
+        }
+
+        const normalized = /^https?:\/\//i.test(baseURL)
+            ? baseURL
+            : `https://${baseURL}`;
+
+        const url =new URL(
+            this.basePath,
+            normalized
+        ).toString();
+        logger.info(`Resolved request path: ${url}`);
+        return url;
     }
 
     /**
