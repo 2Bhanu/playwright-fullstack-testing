@@ -3,8 +3,8 @@ import {
     test as base,
 } from '@playwright/test';
 
-import { BasePage } from '@/ui/pages/base/basepage';
-import { type PageFixtures, PageManager } from '@/ui/pages/PageManager';
+import { BasePage } from '@/ui/pages/base/base-page';
+import { type PageFixtures, PageManager } from '@/ui/pages/page-manager';
 
 
 

@@ -1,5 +1,8 @@
 import { APIRequestContext } from "@playwright/test";
-import { SimplifiedRequest } from "./SimplifiedRequest";
+
+
+import { SimplifiedRequest } from "./simplified-request";
+
 import { Env } from "@/config/env";
 
 

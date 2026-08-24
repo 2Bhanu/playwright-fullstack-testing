@@ -1,5 +1,6 @@
 
 import { Env } from '@/config/env';
+import { utils } from '@/framework/utils/utils';
 import {
     APIRequestContext,
     APIResponse,
@@ -325,15 +326,7 @@ export class SimplifiedRequest {
      * is a relative path, it is resolved against the default base URL.
      */
     private resolvePath(): string {
-    if (!this.endpointPath) {
-        throw new Error("Endpoint path has not been set");
-    }
-
-    const baseURL = /^https?:\/\//i.test(this.reqBaseURL)
-        ? this.reqBaseURL
-        : `https://${this.reqBaseURL}`;
-
-    return new URL(this.endpointPath, baseURL).toString();
+        return utils.buildUrl(this.endpointPath ?? '', this.reqBaseURL);
 }
 
     /**

@@ -1,9 +1,9 @@
 import type { Page } from '@playwright/test';
 
-import { BasePage } from './base/basepage';
+import { BasePage } from './base/base-page';
 
-import CommonComponentsPage from './components/commonComponentsPage';
-import { AutomationPracticePage } from './example_pages/automationPracticePage';
+import CommonComponentsPage from './components/common-componentsPage';
+import { AutomationPracticePage } from './example/automation-practice-page';
 
 /*
  * Describes a PAGE CLASS.

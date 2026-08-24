@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { createData } from "../createData";
+import { createData } from "../create-data";
 
 
 export const UserData = createData(

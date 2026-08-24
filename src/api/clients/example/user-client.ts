@@ -1,7 +1,7 @@
 import type { APIRequestContext } from '@playwright/test';
 
-import { BaseApiClient } from '../BaseApiClient';
-import { SimplifiedRequest } from '../SimplifiedRequest';
+import { BaseApiClient } from '../base-api-client';
+import { SimplifiedRequest } from '../simplified-request';
 
 
 export class UserClient extends BaseApiClient {

@@ -4,8 +4,8 @@ import {
     test as base,
 } from '@playwright/test';
 
-import { type ApiClientFixtures, ApiClientManager } from '@/api/Clients/ApiClientManager';
-import { BaseApiClient } from '@/api/Clients/BaseApiClient';
+import { type ApiClientFixtures, ApiClientManager } from '@/api/clients/api-client-manager';
+import { BaseApiClient } from '@/api/clients/base-api-client';
 
 
 

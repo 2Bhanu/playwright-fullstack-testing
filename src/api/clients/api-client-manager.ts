@@ -1,10 +1,10 @@
 import type { APIRequestContext } from '@playwright/test';
 
-import { AuthClient } from './AuthClient';
-import { BaseApiClient } from './BaseApiClient';
-import { AdminClient } from './example/AdminClient';
-import { ReqresUserClient } from './example/reqresUserClient';
-import { UserClient } from './example/UserClient';
+import { AuthClient } from './auth-client';
+import { BaseApiClient } from './base-api-client';
+import { AdminClient } from './example/admin-client';
+import { ReqresUserClient } from './example/reqres-user';
+import { UserClient } from './example/user-client';
 
 /*
  * Describes a CLIENT CLASS.
