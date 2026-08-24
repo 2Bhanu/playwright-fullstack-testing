@@ -38,5 +38,10 @@ export abstract class BaseApiClient {
     ) {
         this.simplifiedRequest = new SimplifiedRequest(this.request,this.baseURL);
     }
-    
+
+    //* provide a general purpose method to get a SimplifiedRequest instance with a specific baseURL, this can be useful if test involves hitting a 3rd party url that does not need a dedicated client.
+    getSimplifiedRequest(baseURL: string): SimplifiedRequest {
+        return new SimplifiedRequest(this.request, baseURL);
+    }
+
 }
