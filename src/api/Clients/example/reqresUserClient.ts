@@ -14,18 +14,13 @@ import { Env } from "@/config/env";
  * `EndpointMap.reqres.*` so renaming or cross-environment swaps
  * stay in one place.
  *
- * The default `forURL` is read from `Env.reqresBaseHost`. Tests
- * may override per call with `.forURL(...)` on the chain.
+ * The default base URL is read from `Env.reqres.baseURL` and passed
+ * directly to each `SimplifiedRequest` constructor. `BaseApiClient`
+ * holds no URL state — base URL handling lives entirely in
+ * `SimplifiedRequest`. Tests may override per call with
+ * `.forURL(...)` on the chain.
  */
 export class ReqresUserClient extends BaseApiClient {
-
-    constructor(
-        request: import('@playwright/test').APIRequestContext
-    ) {
-        super(request, {
-            forURL: Env.reqresBaseHost
-        });
-    }
 
 
     /*
@@ -35,6 +30,6 @@ export class ReqresUserClient extends BaseApiClient {
         new SimplifiedRequest(
             this.request,
             EndpointMap.resolve('reqres.listUsers'),
-            this.defaultForURL
+            Env.baseURL
         );
 }

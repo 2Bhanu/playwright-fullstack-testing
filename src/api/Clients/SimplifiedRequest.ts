@@ -1,5 +1,4 @@
 
-import { logger } from '@/framework/logging/logger';
 import {
     APIRequestContext,
     APIResponse,
@@ -46,6 +45,12 @@ export type AuthCredentials =
  * return `this`; the terminal methods (`post`, `get`, `put`, `patch`,
  * `delete`) issue the call and return Playwright's raw `APIResponse`.
  *
+ * The constructor accepts an optional `defaultBaseURL` — the URL
+ * the request is resolved against when no chain-level `.forURL(...)`
+ * override is in effect. Subclasses typically pass an `Env.*BaseHost`
+ * value so each endpoint carries its own host without a parallel
+ * storage layer on `BaseApiClient`.
+ *
  * Usage:
  *
  *     const token = await authClient.getBearerToken();
@@ -61,6 +66,9 @@ export type AuthCredentials =
  *     // api key (optional custom header name):
  *     .withAuth('apiKey', key)
  *     .withAuth('apiKey', key, 'X-Custom-Key')
+ *
+ *     // override base URL for this single request:
+ *     .forURL('https://staging.reqres.in')
  *
  *     expect(response.status()).toBe(201);
  *     const body = await response.json();
@@ -84,7 +92,7 @@ export class SimplifiedRequest {
     constructor(
         private readonly request: APIRequestContext,
         private readonly basePath: string,
-        private readonly defaultForURL?: string
+        private readonly defaultBaseURL?: string
     ) {}
 
 
@@ -181,9 +189,10 @@ export class SimplifiedRequest {
     /**
      * Override the base URL for this request only.
      *
-     * Resolved against `basePath` when the terminal method fires.
-     * Falls back to the client-level default (set via
-     * `BaseApiClient`'s `forURL` option) when omitted.
+     * Localized to this chain — does not mutate `request` globally,
+     * does not affect sibling endpoints, and does not persist across
+     * terminal calls. The next call on the same endpoint falls back
+     * to the constructor's `defaultBaseURL`.
      *
      *     await reqresUserClient.listUsersEndPoint
      *         .forURL('https://staging.reqres.in')
@@ -308,15 +317,15 @@ export class SimplifiedRequest {
     /**
      * Resolve `basePath` against the active base URL.
      *
-     * Chain-level `.forURL(...)` wins; otherwise the client-level
-     * default (set via `BaseApiClient`'s `forURL` option) is used.
-     * If neither is set, the path is returned as-is and Playwright
-     * resolves it against its own configured baseURL (if any).
+     * Chain-level `.forURL(...)` wins; otherwise the constructor's
+     * `defaultBaseURL` is used. If neither is set, the path is
+     * returned as-is and Playwright resolves it against its own
+     * configured baseURL (if any) on the request context.
      */
     private resolvePath(): string {
 
         const baseURL =
-            this.chainForURL ?? this.defaultForURL;
+            this.chainForURL ?? this.defaultBaseURL;
 
         if (!baseURL) {
             return this.basePath;
@@ -326,12 +335,10 @@ export class SimplifiedRequest {
             ? baseURL
             : `https://${baseURL}`;
 
-        const url =new URL(
+        return new URL(
             this.basePath,
             normalized
         ).toString();
-        logger.info(`Resolved request path: ${url}`);
-        return url;
     }
 
     /**

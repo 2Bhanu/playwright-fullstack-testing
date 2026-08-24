@@ -10,10 +10,10 @@ import { Env } from '@/config/env';
  *     curl -X GET 'https://reqres.in/api/users' \
  *          -H 'x-api-key: reqres_…'
  *
- * - Base URL flows from `Env.reqresBaseHost` via the client's
- *   default `forURL`. Tests can override with `.forURL(...)` on
+ * - Base URL flows from `Env.reqres.baseURL` via the client's
+ *   default base URL. Tests can override with `.forURL(...)` on
  *   the chain when needed.
- * - API key is sourced from `Env.reqresAPIKey`; never hard-coded.
+ * - API key is sourced from `Env.reqres.api_key`; never hard-coded.
  * - Header name `x-api-key` is passed as the third arg to
  *   `withAuth('apiKey', …)` because the framework's default
  *   api-key header is `X-API-Key`, not `x-api-key`.
@@ -26,7 +26,7 @@ test(
             await reqresUserClient.listUsersEndPoint
                 .withAuth(
                     'apiKey',
-                    Env.reqresAPIKey,
+                    Env.reqres.api_key,
                     'x-api-key'
                 )
                 .get();
