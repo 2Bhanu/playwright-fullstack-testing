@@ -96,7 +96,7 @@ export abstract class BasePage {
     pageLoadCheck?: boolean;
   }) {
     //set defaults
-    const baseURL = options?.baseURL ?? Env.fsr.baseURL;
+    const baseURL = options?.baseURL ?? Env.baseURL;
     const pageLoadCheck = options?.pageLoadCheck ?? true;
     //Navigate and conditionally validate page load
     await this.page.goto(utils.buildUrl(this.endpoint, baseURL));

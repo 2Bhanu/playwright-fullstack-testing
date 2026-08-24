@@ -1,5 +1,5 @@
-import { expect, test } from '@/framework/fixtures/fixture_aggregator';
 import { Env } from '@/config/env';
+import { expect, test } from '@/framework/fixtures/fixture_aggregator';
 
 
 /*
@@ -26,7 +26,7 @@ test(
             await reqresUserClient.listUsersEndPoint
                 .withAuth(
                     'apiKey',
-                    Env.reqres.api_key,
+                    Env.api_key,
                     'x-api-key'
                 )
                 .get();
