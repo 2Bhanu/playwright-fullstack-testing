@@ -1,9 +1,7 @@
 
-import { BaseApiClient } from "../BaseApiClient";
-import { SimplifiedRequest } from "../SimplifiedRequest";
+import { APIRequestContext } from "@playwright/test";
 
-import { EndpointMap } from "@/api/endpoint";
-import { Env } from "@/config/env";
+import { BaseApiClient } from "../BaseApiClient";
 
 
 /*
@@ -23,13 +21,12 @@ import { Env } from "@/config/env";
 export class ReqresUserClient extends BaseApiClient {
 
 
+    constructor(request: APIRequestContext) {
+        super(request);
+    }
+
     /*
      * List users — GET /api/users
      */
-    readonly listUsersEndPoint =
-        new SimplifiedRequest(
-            this.request,
-            EndpointMap.resolve('reqres.listUsers'),
-            Env.baseURL
-        );
+    readonly listUsersEndPoint = this.simplifiedRequest.setEndpoint('/api/users');
 }

@@ -1,4 +1,6 @@
 import { APIRequestContext } from "@playwright/test";
+import { SimplifiedRequest } from "./SimplifiedRequest";
+import { Env } from "@/config/env";
 
 
 /**
@@ -29,8 +31,12 @@ import { APIRequestContext } from "@playwright/test";
  *     );
  */
 export abstract class BaseApiClient {
-
+    private readonly baseURL = Env.baseURL;
+    protected readonly simplifiedRequest: SimplifiedRequest;
     constructor(
         protected readonly request: APIRequestContext
-    ) {}
+    ) {
+        this.simplifiedRequest = new SimplifiedRequest(this.request,this.baseURL);
+    }
+    
 }

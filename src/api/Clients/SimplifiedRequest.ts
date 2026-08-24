@@ -1,4 +1,5 @@
 
+import { Env } from '@/config/env';
 import {
     APIRequestContext,
     APIResponse,
@@ -87,14 +88,15 @@ export class SimplifiedRequest {
     private authType?: AuthType;
     private authCredentials?: AuthCredentials;
     private ignoreHTTPSErrors: boolean = false;
-    private chainForURL?: string;
-
     constructor(
         private readonly request: APIRequestContext,
-        private readonly basePath: string,
-        private readonly defaultBaseURL?: string
+        private reqBaseURL: string,
+        private  readonly endpointPath?: string
     ) {}
 
+    setEndpoint(endpointPath: string): SimplifiedRequest {
+        return new SimplifiedRequest(this.request, this.reqBaseURL, endpointPath);
+    }
 
     /*
      * ============================================================
@@ -199,7 +201,7 @@ export class SimplifiedRequest {
      *         .get();
      */
     forURL(url: string): this {
-        this.chainForURL = url;
+        this.reqBaseURL = url;
         return this;
     }
 
@@ -315,31 +317,24 @@ export class SimplifiedRequest {
     }
 
     /**
-     * Resolve `basePath` against the active base URL.
+     * Resolve the base URL for this request, falling back to the
+     * constructor's default if no chain-level override is in effect.
      *
-     * Chain-level `.forURL(...)` wins; otherwise the constructor's
-     * `defaultBaseURL` is used. If neither is set, the path is
-     * returned as-is and Playwright resolves it against its own
-     * configured baseURL (if any) on the request context.
+     * The base URL is normalized to a full URL with scheme and host.
+     * If the base URL is already a full URL, it is used as-is. If it
+     * is a relative path, it is resolved against the default base URL.
      */
     private resolvePath(): string {
-
-        const baseURL =
-            this.chainForURL ?? this.defaultBaseURL;
-
-        if (!baseURL) {
-            return this.basePath;
-        }
-
-        const normalized = /^https?:\/\//i.test(baseURL)
-            ? baseURL
-            : `https://${baseURL}`;
-
-        return new URL(
-            this.basePath,
-            normalized
-        ).toString();
+    if (!this.endpointPath) {
+        throw new Error("Endpoint path has not been set");
     }
+
+    const baseURL = /^https?:\/\//i.test(this.reqBaseURL)
+        ? this.reqBaseURL
+        : `https://${this.reqBaseURL}`;
+
+    return new URL(this.endpointPath, baseURL).toString();
+}
 
     /**
      * Project the chain's auth state (if any) onto the headers bag.
