@@ -24,6 +24,6 @@
       "@types/*": ["src/types/*"]
     }
   },
-  "include": ["src/**/*", "tests/**/*.ts", "playwright.config.ts"],
+  "include": ["src/**/*", "tests/**/*.ts", "playwright.config.ts", "prisma.config.ts"],
   "exclude": ["node_modules", "dist", "test-results", "playwright-report"]
 }

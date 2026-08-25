@@ -235,6 +235,59 @@ PWDEBUG=cli npx playwright test tests/ui/<feature>/<journey>.spec.ts
 - **Prettier** for formatting.
 - **`@typescript-eslint/no-floating-promises`** is `error` — you cannot forget an `await`.
 
+### Database (DB) layer
+
+Tests interact with the application's database through a domain-oriented ORM layer that mirrors the API Request Object philosophy — tests call `db.users.findByEmail(...)` and never see raw SQL or Prisma.
+
+The layer has two pieces, **coupled directly** (no manager in between):
+
+| Piece | Lives at | Responsibility |
+|---|---|---|
+| **DBClient** (layer 1) | [`src/framework/db/core/db-client.ts`](src/framework/db/core/db-client.ts) | Connection lifecycle, schema switch, table introspection, raw-query escape hatch. Wraps Prisma. |
+| **Repositories** (layer 2) | [`src/framework/db/repositories/`](src/framework/db/repositories) | Domain-named CRUD on a specific entity. Each takes a `DBClient` directly in its constructor. |
+
+The fixture ([`src/framework/db/core/db-fixture.ts`](src/framework/db/core/db-fixture.ts)) is **worker-scoped** so the SSH connection, tunnel, and Prisma client are created once per worker — not once per test. It exposes two test-scope fixtures:
+
+```ts
+test('API updates user in DB', async ({ db, usersApi }) => {
+
+    const user = await db.users.create({
+        name: 'John',
+        email: 'john@example.com',
+        status: 'ACTIVE',
+    });
+
+    await usersApi.disable(user.id);
+
+    const updated = await db.users.findById(user.id);
+
+    expect(updated?.status).toBe('DISABLED');
+});
+```
+
+For database-level inspection:
+
+```ts
+test('schema has expected tables', async ({ dbClient }) => {
+    const tables = await dbClient.listTables();
+    expect(tables).toContain('User');
+});
+```
+
+#### SSH tunneling
+
+For databases not directly reachable from the test machine, set `SSH_TUNNEL_ENABLED=true` plus the `SSH_TUNNEL_*` variables in `.env`. The framework ([`src/framework/db/infrastructure/ssh-tunnel-manager.ts`](src/framework/db/infrastructure/ssh-tunnel-manager.ts)) opens the tunnel programmatically via `ssh2`; Prisma connects to `localhost:<SSH_TUNNEL_LOCAL_PORT>` and never knows the tunnel exists. Tests remain unaware.
+
+#### Adding a new entity
+
+1. Add the model to [`prisma/schema.prisma`](prisma/schema.prisma) and run `npx prisma generate`.
+2. Create a new repository in [`src/framework/db/repositories/`](src/framework/db/repositories) — constructor takes a `DBClient`.
+3. Pre-build it in [`src/framework/db/core/db-fixture.ts`](src/framework/db/core/db-fixture.ts) and extend the `db` fixture type.
+
+#### Swapping ORMs
+
+Replace [`src/framework/db/infrastructure/prisma-client-factory.ts`](src/framework/db/infrastructure/prisma-client-factory.ts) and the per-entity repositories. The `DBClient` shape, the fixture, the SSH manager, and the test-side API stay unchanged.
+
 ---
 
 ## Project layout
@@ -258,10 +311,18 @@ src/
 ├── api/
 │   ├── Clients/                           ← API clients, all extend BaseApiClient
 │   └── endpoint.ts                        ← EndpointMap (single source of truth)
-├── config/env.ts                          ← Env singleton
+├── config/env.ts                          ← Env singleton + DB/SSH config
 └── framework/
     ├── core/simplified_locator.ts         ← SimplifiedLocator wrapper
     ├── pages/base/basepage.ts             ← BasePage + Proxy
+    ├── db/
+    │   ├── core/
+    │   │   ├── db-client.ts               ← layer 1: DBClient wraps PrismaClient
+    │   │   └── db-fixture.ts              ← worker-scoped Playwright fixture
+    │   ├── repositories/                  ← layer 2: domain-oriented CRUD per entity
+    │   └── infrastructure/
+    │       ├── prisma-client-factory.ts   ← single seam where ORMs swap
+    │       └── ssh-tunnel-manager.ts      ← programmatic SSH tunnel
     ├── fixtures/
     │   ├── fixture_aggregator.ts          ← single import point for tests
     │   ├── pageFixture.ts                 ← page fixtures
@@ -273,6 +334,10 @@ src/
     │   ├── deepMerge.ts
     │   └── schema/                        ← one *.ts per domain entity
     └── utils/utils.ts
+
+prisma/
+└── schema.prisma                          ← Prisma schema (sample User model)
+prisma.config.ts                          ← Prisma 7 config (DATABASE_URL lives here)
 
 tests/
 ├── ui/<feature>/<journey>.spec.ts

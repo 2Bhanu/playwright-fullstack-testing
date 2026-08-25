@@ -1,0 +1,31 @@
+/*
+ * Sample Prisma schema for the framework's DB layer.
+ *
+ * Replace this with your application's actual schema and run
+ * `npx prisma generate` to (re)build the typed client.
+ *
+ * The framework's DBClient + repositories sit on top of the
+ * generated `@prisma/client`. Tests never touch Prisma directly.
+ *
+ * The `User` model here mirrors the UserRepository sample in
+ * src/framework/db/repositories/user-repository.ts.
+ *
+ * NOTE (Prisma 7): the `url` field is no longer declared in this
+ * file. Configure the connection URL in `prisma.config.ts` next
+ * to this file — see that file for the `datasource` shape.
+ */
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id     String @id @default(cuid())
+  name   String
+  email  String @unique
+  status String @default("ACTIVE")
+}

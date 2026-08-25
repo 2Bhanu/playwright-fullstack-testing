@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test:report:allure": "allure generate allure-results --clean -o allure-report && allure open allure-report",
-  "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "test": "npx playwright test"
   },
   "keywords": [],
@@ -15,6 +15,8 @@
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@types/node": "^22.19.17",
+    "@types/pg": "^8.23.1",
+    "@types/ssh2": "^1.15.5",
     "@typescript-eslint/eslint-plugin": "^8.58.2",
     "@typescript-eslint/parser": "^8.58.2",
     "allure-commandline": "^2.43.0",
@@ -25,9 +27,14 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-playwright": "^2.10.1",
     "prettier": "^3.3.0",
+    "prisma": "^7.9.1",
     "typescript": "^5.4.0"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "pg": "^8.23.0",
+    "ssh2": "^1.17.0",
     "zod": "^3.25.23"
   }
 }

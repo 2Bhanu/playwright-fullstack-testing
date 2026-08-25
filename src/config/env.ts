@@ -41,12 +41,76 @@ export function getEnvOptional(
  * carry. It is intentionally not used as the annotation on the
  * `Env` constant — see below for why.
  */
+export type DatabaseConfig = {
+    url: string;
+};
+
+export type SshTunnelConfig = {
+    enabled: boolean;
+    host: string;
+    port: number;
+    username: string;
+    privateKeyPath?: string;
+    password?: string;
+    localPort: number;
+    remoteHost: string;
+    remotePort: number;
+};
+
 export type EnvType = {
     baseURL: string;
     username?: string;
     password?: string;
     api_key?: string;
+    database?: DatabaseConfig;
+    sshTunnel?: SshTunnelConfig;
 };
+
+
+/*
+ * ================================================================
+ * DB / SSH ENV BUILDERS
+ * ================================================================
+ *
+ * Both builders use `getEnvOptional` so existing envs (without
+ * DB or SSH config) keep working unchanged. Tests that need the
+ * DB layer read these accessors; tests that don't are unaffected.
+ *
+ * `database` requires DATABASE_URL.
+ * `sshTunnel` returns `undefined` unless SSH_TUNNEL_ENABLED=true.
+ */
+function buildDatabaseConfig(): DatabaseConfig | undefined {
+    const url = getEnvOptional("DATABASE_URL");
+    if (!url) return undefined;
+    return { url };
+}
+
+function buildSshTunnelConfig(): SshTunnelConfig | undefined {
+    const enabled =
+        getEnvOptional("SSH_TUNNEL_ENABLED") === "true";
+
+    if (!enabled) return undefined;
+
+    /*
+     * When the tunnel is enabled, every required field is
+     * mandatory. Read them with `getEnv` so a missing field
+     * fails fast at module load — much better than a tunnel
+     * that silently binds the wrong port at test runtime.
+     */
+    return {
+        enabled: true,
+        host: getEnv("SSH_TUNNEL_HOST"),
+        port: Number(getEnv("SSH_TUNNEL_PORT")),
+        username: getEnv("SSH_TUNNEL_USERNAME"),
+        privateKeyPath: getEnvOptional(
+            "SSH_TUNNEL_PRIVATE_KEY_PATH"
+        ),
+        password: getEnvOptional("SSH_TUNNEL_PASSWORD"),
+        localPort: Number(getEnv("SSH_TUNNEL_LOCAL_PORT")),
+        remoteHost: getEnv("SSH_TUNNEL_REMOTE_HOST"),
+        remotePort: Number(getEnv("SSH_TUNNEL_REMOTE_PORT")),
+    };
+}
 
 
 /*
@@ -84,3 +148,16 @@ const Envs = {
 } as const satisfies Record<string, EnvType>;
 
 export const Env = Envs.reqres;
+
+
+/*
+ * ================================================================
+ * DB / SSH CONFIG EXPORTS
+ * ================================================================
+ *
+ * Exposed as singletons next to `Env` so tests and the framework
+ * have a single, consistent access pattern. Tests never read
+ * `process.env` directly.
+ */
+export const DbConfig = buildDatabaseConfig();
+export const SshTunnelConfigEnv = buildSshTunnelConfig();
