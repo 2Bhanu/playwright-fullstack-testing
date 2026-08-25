@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { deepMerge } from "./deepMerge";
+import { deepMerge } from "./deep-merge";
 import { DeepPartial } from "./types";
 
 

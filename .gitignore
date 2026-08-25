@@ -28,7 +28,7 @@ build/
 # Example test folders
 /tests/ui/example/
 /tests/api/example/
-/src/framework/pages/example_pages
+/src/ui/pages/example_pages
 /src/framework/fixtures/example_fixture
 
 #playwright

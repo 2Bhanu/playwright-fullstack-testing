@@ -6,7 +6,8 @@ import {
 } from '@playwright/test';
 
 import { logger } from '@/framework/logging/logger';
-import type { BasePage } from '@/framework/pages/base/basepage';
+import { BasePage } from '../pages/base/base-page';
+
 
 type Role = Parameters<Page['getByRole']>[0];
 type RoleOptions = Parameters<Page['getByRole']>[1];

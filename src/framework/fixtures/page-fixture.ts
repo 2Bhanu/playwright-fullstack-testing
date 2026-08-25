@@ -1,13 +1,10 @@
-
 import {
-    APIRequestContext,
+    Page,
     test as base,
 } from '@playwright/test';
 
-import { type ApiClientFixtures, ApiClientManager } from '@/api/clients/api-client-manager';
-import { BaseApiClient } from '@/api/clients/base-api-client';
-
-
+import { BasePage } from '@/ui/pages/base/base-page';
+import { type PageFixtures, PageManager } from '@/ui/pages/page-manager';
 
 
 
@@ -16,9 +13,9 @@ import { BaseApiClient } from '@/api/clients/base-api-client';
  *
  * Automatically derived from:
  *
- *     ApiClientManager.clients
+ *     PageManager.clients
  */
-type Fixtures = ApiClientFixtures;
+type Fixtures = PageFixtures;
 
 
 /*
@@ -26,18 +23,18 @@ type Fixtures = ApiClientFixtures;
  *
  * This type exists only so TypeScript knows the types of:
  *
- *     request
+ *     page
  *     use
  *
  * We don't need to make the dynamic registry itself
  * excessively clever.
  */
-type ApiClientFixture = (
+type PageFixture = (
     args: {
-        request: APIRequestContext;
+        page: Page;
     },
     use: (
-        client: BaseApiClient
+        page: BasePage
     ) => Promise<void>
 ) => Promise<void>;
 
@@ -45,22 +42,22 @@ type ApiClientFixture = (
 /*
  * Runtime collection of generated fixtures.
  */
-const clientFixtures:
-    Record<string, ApiClientFixture> = {};
+const pageFixtures:
+    Record<string, PageFixture> = {};
 
 
 /*
  * ================================================================
- * GENERATE CLIENT FIXTURES
+ * GENERATE PAGE FIXTURES
  * ================================================================
  */
 for (
-    const [fixtureName, ClientClass]
-    of Object.entries(ApiClientManager.clients)
+    const [fixtureName, PageClass]
+    of Object.entries(PageManager.clients)
 ) {
 
-    clientFixtures[fixtureName] = async (
-        { request },
+    pageFixtures[fixtureName] = async (
+        { page },
         use
     ) => {
 
@@ -69,7 +66,7 @@ for (
          * It is NOT a Playwright fixture.
          */
         const manager =
-            new ApiClientManager(request);
+            new PageManager(page);
 
 
         /*
@@ -78,23 +75,23 @@ for (
          *     setup()
          *     construction
          */
-        const client =
-            await manager.create(ClientClass);
+        const pageInstance =
+            await manager.create(PageClass);
 
 
         try {
 
             /*
-             * Give client to the test.
+             * Give page to the test.
              */
-            await use(client);
+            await use(pageInstance);
 
         } finally {
 
             /*
              * Handles optional cleanup().
              */
-            await manager.cleanup(ClientClass);
+            await manager.cleanup(PageClass);
         }
     };
 }
@@ -105,7 +102,7 @@ for (
  * PLAYWRIGHT TEST
  * ================================================================
  */
-export const test_api =
+export const test_page =
     base.extend<Fixtures>({
-        ...clientFixtures,
+        ...pageFixtures,
     });
